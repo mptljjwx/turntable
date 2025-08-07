@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大转盘抽奖</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            font-family: 'Microsoft YaHei', sans-serif;
+            color: white;
+            padding: 20px;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 800px;
+            width: 100%;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-align: center;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+            text-align: center;
+        }
+        
+        .wheel-container {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            margin: 20px auto;
+        }
+        
+        .wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+            border: 10px solid #ffd700;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+            background: #fff;
+            transition: transform 4s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+        }
+        
+        .sector {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 50%;
+            height: 50%;
+            transform-origin: right bottom;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: bold;
+            font-size: 18px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+        
+        .sector-content {
+            transform: rotate(22.5deg);
+            width: 80px;
+            text-align: center;
+            margin-left: 20px;
+        }
+        
+        .pointer {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 60px;
+            background: #e74c3c;
+            clip-path: polygon(50% 100%, 0 0, 100% 0);
+            z-index: 10;
+        }
+        
+        .pointer::after {
+            content: "";
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 20px;
+            background: #ffd700;
+            border-radius: 50%;
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
+        
+        .btn-spin {
+            background: linear-gradient(to right, #ff416c, #ff4b2b);
+            color: white;
+            border: none;
+            padding: 15px 50px;
+            font-size: 1.5rem;
+            border-radius: 50px;
+            cursor: pointer;
+            margin: 30px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+        
+        .btn-spin:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        }
+        
+        .btn-spin:active {
+            transform: translateY(1px);
+        }
+        
+        .btn-spin:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .result {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px 40px;
+            margin-top: 20px;
+            text-align: center;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: bold;
+            width: 80%;
+            max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            transition: all 0.5s ease;
+        }
+        
+        .result.highlight {
+            background: rgba(255, 215, 0, 0.3);
+            color: #ffd700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            transform: scale(1.05);
+        }
+        
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 1rem;
+            text-align: center;
+            width: 80%;
+            max-width: 500px;
+        }
+        
+        .prizes {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+            width: 100%;
+            max-width: 600px;
+        }
+        
+        .prize-item {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            padding: 8px 15px;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 500px) {
+            .wheel-container {
+                width: 300px;
+                height: 300px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .sector {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎡 幸运大转盘 🎡</h1>
+        <p class="subtitle">试试手气，看看吃啥！</p>
+        
+        <div class="wheel-container">
+            <div class="wheel" id="wheel">
+                <!-- 扇形区域由JavaScript动态生成 -->
+            </div>
+            <div class="pointer"></div>
+        </div>
+        
+        <button class="btn-spin" id="spinBtn">开始</button>
+        
+        <div class="result" id="result">等待选择...</div>
+        
+        <div class="instructions">
+            <p>点击"开始"按钮，转盘开始旋转，随机停止后将显示今天吃什么</p>
+        </div>
+        
+        <div class="prizes">
+            <div class="prize-item">🥟：喜佳德</div>
+            <div class="prize-item">🍚：米村拌饭</div>
+            <div class="prize-item">🍜：面条</div>
+            <div class="prize-item">🐮：牛肉汤</div>
+            <div class="prize-item">🐷：</div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const wheel = document.getElementById('wheel');
+            const spinBtn = document.getElementById('spinBtn');
+            const result = document.getElementById('result');
+            
+            // 奖品配置
+            const prizes = [
+                { name: "🥟：喜佳德", color: "#FF6384" },
+                { name: "🍚：米村拌饭", color: "#36A2EB" },
+                { name: "🍜：面条", color: "#FFCE56" },
+                { name: "🐮：牛肉汤", color: "#4BC0C0" },
+                { name: "🐷：", color: "#9966FF" }
+                //{ name: "六等奖：50元茶券", color: "#FF9F40" },
+                //{ name: "七等奖：电影票", color: "#C9CBCF" },
+                //{ name: "幸运奖：再来一次", color: "#47CC8E" }
+            ];
+            
+            // 创建转盘扇形
+            function createWheelSectors() {
+                const sectorAngle = 360 / prizes.length;
+                
+                prizes.forEach((prize, index) => {
+                    const sector = document.createElement('div');
+                    sector.className = 'sector';
+                    sector.style.transform = `rotate(${index * sectorAngle}deg)`;
+                    sector.style.backgroundColor = prize.color;
+                    
+                    const content = document.createElement('div');
+                    content.className = 'sector-content';
+                    content.textContent = prize.name.split('：')[0];
+                    sector.appendChild(content);
+                    
+                    wheel.appendChild(sector);
+                });
+            }
+            
+            // 旋转转盘
+            function spinWheel() {
+                // 禁用按钮防止重复点击
+                spinBtn.disabled = true;
+                result.textContent = "转盘旋转中...";
+                result.classList.remove('highlight');
+                
+                // 随机选择奖品（0-7）
+                const prizeIndex = Math.floor(Math.random() * prizes.length);
+                const prize = prizes[prizeIndex];
+                
+                // 计算旋转角度（多转几圈增加效果）
+                const sectorAngle = 360 / prizes.length;
+                const extraRotations = 5; // 额外旋转圈数
+                const rotation = 360 * extraRotations + (360 - (prizeIndex * sectorAngle)) - (sectorAngle / 2);
+                
+                // 应用旋转
+                wheel.style.transform = `rotate(${rotation}deg)`;
+                
+                // 旋转结束后显示结果
+                setTimeout(() => {
+                    result.textContent = `今天吃: ${prize.name} 🎉`;
+                    result.classList.add('highlight');
+                    spinBtn.disabled = false;
+                    
+                    // 播放音效（仅示意，实际项目中需要添加音效文件）
+                    try {
+                        const audio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAAAA');
+                        audio.volume = 0.3;
+                        audio.play().catch(e => console.log("音效播放失败:", e));
+                    } catch (e) {
+                        console.log("音效播放失败:", e);
+                    }
+                }, 4000);
+            }
+            
+            // 初始化转盘
+            createWheelSectors();
+            
+            // 添加事件监听
+            spinBtn.addEventListener('click', spinWheel);
+            
+            // 添加键盘支持
+            document.addEventListener('keydown', (e) => {
+                if (e.code === 'Space' && !spinBtn.disabled) {
+                    spinWheel();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
